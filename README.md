@@ -17,12 +17,16 @@ dotnet test
 ```
 WebApi → Infrastructure → Application → Domain
 ```
-| Project | Status |
-|---|---|
-| `MarwanQuTech.Domain` | ✅ Step 1 — entities, value objects, enums, domain events |
-| `MarwanQuTech.Application` | ⏳ Step 2 |
-| `MarwanQuTech.Infrastructure` | ⏳ Step 3 |
-| `MarwanQuTech.WebApi` | ⏳ Step 4 |
+| Folder / project | Assembly & root namespace | References | Status |
+|---|---|---|---|
+| `Domain/` | `MarwanQuTech.Domain` | — | ✅ Step 1 — entities, value objects, enums, domain events |
+| `Application/` | `MarwanQuTech.Application` | Domain | ⏳ Step 2 |
+| `Infrastructure/` | `MarwanQuTech.Infrastructure` | Application | ⏳ Step 3 |
+| `WebAPI/` | `MarwanQuTech.WebApi` | Application, Infrastructure | ⏳ Step 4 |
+| `tests/Domain.UnitTests/` | `MarwanQuTech.Domain.UnitTests` | Domain | ✅ xUnit + Shouldly |
+
+Shared build settings (`net10.0`, nullable, implicit usings) live in `Directory.Build.props`;
+NuGet versions live only in `Directory.Packages.props` — never put `Version=` in a `.csproj`.
 
 ## Domain rules at a glance
 - **Bilingual content** — `LocalizedText(Ar, En)`. Drafts need the Arabic title only;

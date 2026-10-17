@@ -1,18 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- TargetFramework / Nullable / ImplicitUsings come from Directory.Build.props -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-	<RootNamespace>MarwanQuTech.Domain</RootNamespace>
-	<AssemblyName>MarwanQuTech.Domain</AssemblyName>
-    <Nullable>enable</Nullable>
+    <RootNamespace>MarwanQuTech.Domain</RootNamespace>
+    <AssemblyName>MarwanQuTech.Domain</AssemblyName>
   </PropertyGroup>
 
   <!-- The Domain layer has ZERO dependencies: no NuGet packages, no project references. -->
 
   <ItemGroup>
-	  <InternalsVisibleTo Include="MarwanQuTech.Domain.UnitTests" />
+    <InternalsVisibleTo Include="MarwanQuTech.Domain.UnitTests" />
   </ItemGroup>
-
 
 </Project>

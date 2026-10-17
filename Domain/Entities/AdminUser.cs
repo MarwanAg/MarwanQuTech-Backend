@@ -2,8 +2,6 @@
 using MarwanQuTech.Domain.Enums;
 using MarwanQuTech.Domain.Exceptions;
 using MarwanQuTech.Domain.ValueObjects;
-using System.Net.Mail;
-using static MarwanQuTech.Domain.Common.DomainConstraints;
 
 namespace MarwanQuTech.Domain.Entities;
 

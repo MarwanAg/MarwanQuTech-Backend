@@ -2,7 +2,6 @@
 using MarwanQuTech.Domain.Events;
 using MarwanQuTech.Domain.Exceptions;
 using MarwanQuTech.Domain.ValueObjects;
-using static MarwanQuTech.Domain.Common.DomainConstraints;
 
 namespace MarwanQuTech.Domain.Entities;
 

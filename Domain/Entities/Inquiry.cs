@@ -3,7 +3,6 @@ using MarwanQuTech.Domain.Enums;
 using MarwanQuTech.Domain.Events;
 using MarwanQuTech.Domain.Exceptions;
 using MarwanQuTech.Domain.ValueObjects;
-using System.Net.Mail;
 using System.Text.RegularExpressions;
 
 namespace MarwanQuTech.Domain.Entities;

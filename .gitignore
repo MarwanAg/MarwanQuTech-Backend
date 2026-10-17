@@ -15,7 +15,7 @@ appsettings.*.local.json
 .env*
 
 ## Uploaded media (generated at runtime)
-src/MarwanQuTech.WebApi/wwwroot/uploads/
+WebAPI/wwwroot/uploads/
 
 ## OS
 .DS_Store
