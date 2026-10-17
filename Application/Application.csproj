@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="MarwanQuTech.Application.UnitTests" />
+    <InternalsVisibleTo Include="MarwanQuTech.Infrastructure.IntegrationTests" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,10 @@
+global using MarwanQuTech.Application.Common.Exceptions;
+global using MarwanQuTech.Application.Common.Interfaces;
+global using MarwanQuTech.Application.Common.Models;
+global using MarwanQuTech.Domain.Common;
+global using MarwanQuTech.Domain.Entities;
+global using MarwanQuTech.Domain.Enums;
+global using MarwanQuTech.Domain.ValueObjects;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;

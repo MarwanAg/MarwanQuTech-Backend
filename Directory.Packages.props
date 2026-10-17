@@ -2,7 +2,7 @@
   <!--
     Central Package Management:
     every NuGet version lives here once; .csproj files reference packages without a Version.
-    Packages for Infrastructure / WebApi are added in the next steps.
+    Packages for WebApi are added in the next step.
   -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -13,6 +13,17 @@
     <PackageVersion Include="MediatR" Version="12.5.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup Label="Infrastructure">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.8.16" />
+    <!-- MIT licensed; WebP encoding. Linux containers also need SkiaSharp.NativeAssets.Linux.NoDependencies (Docker step). -->
+    <PackageVersion Include="SkiaSharp" Version="3.119.0" />
+    <PackageVersion Include="MailKit" Version="4.12.1" />
+    <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">

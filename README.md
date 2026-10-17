@@ -21,10 +21,11 @@ WebApi → Infrastructure → Application → Domain
 |---|---|---|---|
 | `Domain/` | `MarwanQuTech.Domain` | — | ✅ Step 1 — entities, value objects, enums, domain events |
 | `Application/` | `MarwanQuTech.Application` | Domain | ✅ Step 2 — CQRS handlers, validation, caching, auth flows |
-| `Infrastructure/` | `MarwanQuTech.Infrastructure` | Application | ⏳ Step 3 |
+| `Infrastructure/` | `MarwanQuTech.Infrastructure` | Application | ✅ Step 3 — EF Core/SQL Server, Redis, WebP storage, SMTP, JWT/BCrypt |
 | `WebAPI/` | `MarwanQuTech.WebApi` | Application, Infrastructure | ⏳ Step 4 |
 | `tests/Domain.UnitTests/` | `MarwanQuTech.Domain.UnitTests` | Domain | ✅ xUnit + Shouldly |
 | `tests/Application.UnitTests/` | `MarwanQuTech.Application.UnitTests` | Application | ✅ validators, pipeline, invalidation, e-mail |
+| `tests/Infrastructure.IntegrationTests/` | `MarwanQuTech.Infrastructure.IntegrationTests` | Infrastructure | ✅ real SQL Server (LocalDB) + full MediatR pipeline |
 
 Shared build settings (`net10.0`, nullable, implicit usings) live in `Directory.Build.props`;
 NuGet versions live only in `Directory.Packages.props` — never put `Version=` in a `.csproj`.
@@ -59,6 +60,37 @@ NuGet versions live only in `Directory.Packages.props` — never put `Version=` 
 - **Article views** — counted in Redis (`IArticleViewCounter`), flushed by `FlushArticleViewsCommand`;
   on a failed flush the counters are restored.
 
-Ports implemented in Infrastructure (Step 3): `IApplicationDbContext`, `ICacheService`, `IImageStorage`,
-`IEmailSender`, `IPasswordHasher`, `ITokenService`, `IRevalidationService`, `IArticleViewCounter`;
-`ICurrentUser` and `TimeProvider` are registered by the WebApi.
+
+## Infrastructure at a glance
+| Port | Implementation | Without configuration |
+|---|---|---|
+| `IApplicationDbContext` | EF Core + SQL Server, `LocalizedText` as complex types (`Title_AR` / `Title_EN` …) | — (connection string required) |
+| `ICacheService` | Redis (JSON, prefix `mqt:`) | in-memory |
+| `IArticleViewCounter` | Redis hash + per-visitor dedup keys, atomic drain (Lua) | in-memory |
+| `IImageStorage` | SkiaSharp → WebP, resize, EXIF stripped, path-traversal safe | — |
+| `IEmailSender` | MailKit SMTP | logged, not sent |
+| `IRevalidationService` | `POST {NextJs:BaseUrl}/api/revalidate` + `x-revalidate-secret` | skipped |
+| `IPasswordHasher` / `ITokenService` | BCrypt (work factor 12) / HS256 JWT + SHA-256 refresh hashes | — |
+
+- Audit timestamps: `AuditableEntityInterceptor`. Domain events: published after `SaveChangesAsync` succeeds.
+- All `DateTime` values are stored as UTC and read back with `Kind = Utc`.
+- `ArticleViewsFlushJob` flushes buffered views every `BackgroundJobs:ArticleViewsFlushMinutes` and on shutdown.
+- `DatabaseInitializer` applies migrations and creates the admin from `AdminSeed:*` on first run.
+
+## Local setup (Windows)
+```bash
+dotnet tool install --global dotnet-ef --version 10.*
+
+# Secrets — stored outside the repo
+dotnet user-secrets init --project WebAPI
+dotnet user-secrets set "Jwt:SigningKey" "<64+ random characters>" --project WebAPI
+dotnet user-secrets set "AdminSeed:Email" "you@example.com" --project WebAPI
+dotnet user-secrets set "AdminSeed:Password" "<12+ chars, letters and digits>" --project WebAPI
+
+# Database schema
+dotnet ef migrations add InitialCreate --project Infrastructure --startup-project WebAPI --output-dir Persistence/Migrations
+dotnet ef database update --project Infrastructure --startup-project WebAPI
+```
+Integration tests create and drop their own LocalDB databases. To use another SQL Server, set
+`MARWANQUTECH_TEST_SQL` (server part of the connection string, without a database name).
+`ICurrentUser` and the JWT bearer middleware are added by the WebApi (Step 4).
