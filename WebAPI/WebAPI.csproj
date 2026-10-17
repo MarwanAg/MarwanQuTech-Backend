@@ -3,9 +3,13 @@
   <PropertyGroup>
     <RootNamespace>MarwanQuTech.WebApi</RootNamespace>
     <AssemblyName>MarwanQuTech.WebApi</AssemblyName>
+    <!-- `dotnet user-secrets set ... --project WebAPI` stores secrets outside the repo under this id -->
+    <UserSecretsId>marwanqutech-webapi-6f1c2a9e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
     <!-- Needed by `dotnet ef` when WebAPI is the startup project -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
@@ -19,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
+    <InternalsVisibleTo Include="MarwanQuTech.WebApi.IntegrationTests" />
   </ItemGroup>
 
 </Project>

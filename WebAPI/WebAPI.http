@@ -1,4 +1,59 @@
-@WebAPI_HostAddress = http://localhost:5148
+# Quick manual checks (Visual Studio / Rider / VS Code REST Client).
+# Swagger UI: https://localhost:7165/swagger
+@api = https://localhost:7165
 
-# Endpoints are added in Step 4 (WebApi layer).
-###
+### Health
+GET {{api}}/health
+
+### Public — projects (Arabic)
+GET {{api}}/api/projects?lang=ar&page=1&pageSize=10
+
+### Public — featured projects (English)
+GET {{api}}/api/projects?lang=en&featured=true
+
+### Public — articles search
+GET {{api}}/api/articles?lang=en&search=redis
+
+### Public — contact form
+POST {{api}}/api/inquiries
+Content-Type: application/json
+
+{
+  "clientName": "مروان",
+  "email": "client@example.com",
+  "phone": "0791234567",
+  "serviceType": "WebDevelopment",
+  "details": "أحتاج موقعاً تعريفياً لشركتي الصغيرة",
+  "language": "Ar",
+  "website": ""
+}
+
+### Login (sets the mqt_refresh cookie; copy accessToken below)
+# @name login
+POST {{api}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "you@example.com",
+  "password": "your-admin-password"
+}
+
+### Admin — dashboard
+GET {{api}}/api/admin/dashboard
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Admin — create a draft project
+POST {{api}}/api/admin/projects
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "titleAr": "نظام حجز القاعات",
+  "titleEn": "Hall Booking System",
+  "summaryAr": "نظام لإدارة حجوزات القاعات",
+  "summaryEn": "A system for managing hall bookings",
+  "descriptionAr": "## نظرة عامة",
+  "descriptionEn": "## Overview",
+  "isReal": true,
+  "displayOrder": 0
+}

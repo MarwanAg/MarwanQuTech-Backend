@@ -1,17 +1,23 @@
+using MarwanQuTech.Application;
+using MarwanQuTech.Infrastructure;
+using MarwanQuTech.Infrastructure.Persistence;
+using MarwanQuTech.WebApi.Common;
+using Microsoft.Extensions.Options;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddWebApi(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseWebApi();
 
-app.UseHttpsRedirection();
+if (app.Services.GetRequiredService<IOptions<WebApiOptions>>().Value.ApplyMigrationsOnStartup)
+    await app.Services.InitializeDatabaseAsync();
 
-app.UseAuthorization();
+await app.RunAsync();
 
-app.MapControllers();
-
-app.Run();
+/// <summary>Entry point marker for WebApplicationFactory in integration tests.</summary>
+public partial class Program;

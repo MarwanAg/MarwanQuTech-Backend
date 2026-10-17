@@ -22,10 +22,11 @@ WebApi → Infrastructure → Application → Domain
 | `Domain/` | `MarwanQuTech.Domain` | — | ✅ Step 1 — entities, value objects, enums, domain events |
 | `Application/` | `MarwanQuTech.Application` | Domain | ✅ Step 2 — CQRS handlers, validation, caching, auth flows |
 | `Infrastructure/` | `MarwanQuTech.Infrastructure` | Application | ✅ Step 3 — EF Core/SQL Server, Redis, WebP storage, SMTP, JWT/BCrypt |
-| `WebAPI/` | `MarwanQuTech.WebApi` | Application, Infrastructure | ⏳ Step 4 |
+| `WebAPI/` | `MarwanQuTech.WebApi` | Application, Infrastructure | ✅ Step 4 — controllers, JWT + refresh cookie, ProblemDetails, rate limits, Swagger |
 | `tests/Domain.UnitTests/` | `MarwanQuTech.Domain.UnitTests` | Domain | ✅ xUnit + Shouldly |
 | `tests/Application.UnitTests/` | `MarwanQuTech.Application.UnitTests` | Application | ✅ validators, pipeline, invalidation, e-mail |
 | `tests/Infrastructure.IntegrationTests/` | `MarwanQuTech.Infrastructure.IntegrationTests` | Infrastructure | ✅ real SQL Server (LocalDB) + full MediatR pipeline |
+| `tests/WebApi.IntegrationTests/` | `MarwanQuTech.WebApi.IntegrationTests` | WebAPI | ✅ HTTP level: status codes, cookies, rate limits, uploads |
 
 Shared build settings (`net10.0`, nullable, implicit usings) live in `Directory.Build.props`;
 NuGet versions live only in `Directory.Packages.props` — never put `Version=` in a `.csproj`.
@@ -94,4 +95,27 @@ dotnet ef database update --project Infrastructure --startup-project WebAPI
 ```
 Integration tests create and drop their own LocalDB databases. To use another SQL Server, set
 `MARWANQUTECH_TEST_SQL` (server part of the connection string, without a database name).
-`ICurrentUser` and the JWT bearer middleware are added by the WebApi (Step 4).
+
+Run it: `dotnet run --project WebAPI --launch-profile https` → Swagger UI at https://localhost:7165/swagger.
+On startup the API applies migrations and creates the admin from `AdminSeed:*` (first run only).
+
+## HTTP API
+| Area | Routes |
+|---|---|
+| Public | `GET api/projects?lang=ar\|en&page&pageSize&featured` · `GET api/projects/{slug}?lang` |
+| | `GET api/articles?lang&page&pageSize&search` · `GET api/articles/{slug}?lang` · `POST api/articles/{id}/views` |
+| | `POST api/inquiries` (5 / 15 min per IP) · `GET api/sitemap` · `GET /health` |
+| Auth | `POST api/auth/login` (10 / 15 min per IP) · `POST api/auth/refresh` · `POST api/auth/logout?allDevices` |
+| | `GET/PUT api/auth/me` · `PUT api/auth/me/password` |
+| Admin (Bearer, role Admin) | `api/admin/projects` CRUD · `/{id}/publish` · `/{id}/unpublish` · `/{id}/featured` · `/{id}/cover` · `/{id}/images[/order\|/{imageId}[/alt]]` |
+| | `api/admin/articles` CRUD · `/{id}/seo` · `/{id}/publish` · `/{id}/unpublish` · `/{id}/cover` |
+| | `api/admin/inquiries` list · `/{id}` · `/{id}/read` · `/unread-count` · `api/admin/dashboard` |
+
+- **Errors** are `application/problem+json` with a stable `code`: 400 validation (`errors` per field),
+  401, 404, 409 slug taken, 422 business rule (`DomainException`), 423 locked (+ `Retry-After`), 429 rate limit.
+- **Sessions**: access token (15 min) in the response body → keep it in memory; refresh token only in the
+  `mqt_refresh` cookie (HttpOnly, Secure, SameSite=Strict, Path=/api/auth). The frontend calls
+  `POST api/auth/refresh` with `credentials: "include"` when the access token expires.
+- **Enums** are sent and accepted as names (`"WebDevelopment"`, `"Ar"`); numbers are accepted too.
+- **Uploads** are served from `/uploads/...` with a one-year immutable cache.
+- `WebApi:AllowedOrigins` controls CORS (Development allows http://localhost:3000).
