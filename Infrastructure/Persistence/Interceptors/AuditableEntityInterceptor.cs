@@ -43,7 +43,7 @@ public sealed class AuditableEntityInterceptor(TimeProvider clock) : SaveChanges
                     entry.Property(e => e.CreatedAt).CurrentValue = now;
                     break;
 
-                case EntityState.Modified:
+                case EntityState.Modified when !OnlyCountersChanged(entry):
                     entry.Property(e => e.UpdatedAt).CurrentValue = now;
                     break;
 
@@ -54,6 +54,16 @@ public sealed class AuditableEntityInterceptor(TimeProvider clock) : SaveChanges
             }
         }
     }
+
+    /// <summary>
+    /// Bookkeeping columns that change without the content changing. Flushing article views
+    /// must not make an article look "updated" (it would churn the page date and sitemap lastModified).
+    /// </summary>
+    private static readonly HashSet<string> CounterProperties = [nameof(Article.ViewsCount)];
+
+    private static bool OnlyCountersChanged(EntityEntry<AuditableEntity> entry)
+        => entry.ComplexProperties.All(c => !c.IsModified)
+           && entry.Properties.Where(p => p.IsModified).All(p => CounterProperties.Contains(p.Metadata.Name));
 
     // A newly added image may not have its ProjectId fixed up yet; check the navigation instead.
     private static bool HasAddedImages(EntityEntry<AuditableEntity> entry)

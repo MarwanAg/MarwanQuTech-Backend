@@ -103,6 +103,21 @@ public class ArticleFeatureTests(InfrastructureFixture fixture) : IClassFixture<
     }
 
     [Fact]
+    public async Task Flushing_views_does_not_mark_the_article_as_updated()
+    {
+        var article = await PublishedArticleAsync("Counter only", "عداد فقط");
+        var before = await fixture.DbAsync(db => db.Articles.Where(a => a.Id == article.Id).Select(a => a.UpdatedAt).SingleAsync());
+
+        await fixture.SendAsync(new RecordArticleViewCommand(article.Id, "visitor-a"));
+        await fixture.SendAsync(new FlushArticleViewsCommand());
+
+        var after = await fixture.DbAsync(db => db.Articles.Where(a => a.Id == article.Id)
+            .Select(a => new { a.UpdatedAt, a.ViewsCount }).SingleAsync());
+        after.ViewsCount.ShouldBe(1);
+        after.UpdatedAt.ShouldBe(before);
+    }
+
+    [Fact]
     public async Task Sitemap_lists_only_published_content()
     {
         await PublishedArticleAsync("Public", "منشور");

@@ -53,6 +53,13 @@ public class PublicApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         json.ShouldContain("\"Bearer\"");
         json.ShouldContain("/api/admin/projects");
+
+        // Lock icon only on protected operations.
+        using var doc = JsonDocument.Parse(json);
+        var paths = doc.RootElement.GetProperty("paths");
+        paths.GetProperty("/api/projects").GetProperty("get").TryGetProperty("security", out _).ShouldBeFalse();
+        paths.GetProperty("/api/admin/projects").GetProperty("get").TryGetProperty("security", out _).ShouldBeTrue();
+        paths.GetProperty("/api/admin/projects/{id}").GetProperty("put").TryGetProperty("security", out _).ShouldBeTrue();
     }
 
     [Fact]
