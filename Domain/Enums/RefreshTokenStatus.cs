@@ -13,8 +13,14 @@ public enum RefreshTokenStatus
     Expired = 3,
 
     /// <summary>
-    /// An already-revoked token was presented again — likely stolen.
+    /// A token that was already ROTATED was presented again — likely stolen.
     /// All of the admin's refresh tokens have been revoked as a precaution.
     /// </summary>
-    ReuseDetected = 4
+    ReuseDetected = 4,
+
+    /// <summary>
+    /// Token was revoked by logout or a password change (not by rotation).
+    /// It is simply invalid; other sessions are left alone.
+    /// </summary>
+    Revoked = 5
 }

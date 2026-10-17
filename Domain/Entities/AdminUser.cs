@@ -108,8 +108,10 @@ public sealed class AdminUser : AuditableEntity
 
     /// <summary>
     /// Exchanges an active refresh token for a new one.
-    /// Presenting a token that was already revoked means it may have been stolen:
+    /// Presenting a token that was already ROTATED means a copy of it is in someone else's hands:
     /// every token is revoked and <see cref="RefreshTokenStatus.ReuseDetected"/> is returned.
+    /// A token revoked by logout or a password change only yields <see cref="RefreshTokenStatus.Revoked"/>,
+    /// so a stale device can't sign out the session that is still in use.
     /// The caller must SaveChanges in every outcome (the revocations are state changes).
     /// </summary>
     public RefreshTokenRotationResult RotateRefreshToken(
@@ -125,6 +127,9 @@ public sealed class AdminUser : AuditableEntity
 
         if (current.IsRevoked)
         {
+            if (current.ReplacedByTokenHash is null)
+                return new RefreshTokenRotationResult(RefreshTokenStatus.Revoked, null);
+
             RevokeAllRefreshTokens(utcNow);
             return new RefreshTokenRotationResult(RefreshTokenStatus.ReuseDetected, null);
         }

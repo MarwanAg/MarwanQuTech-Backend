@@ -39,7 +39,8 @@ NuGet versions live only in `Directory.Packages.props` — never put `Version=` 
 - **Gallery** — max 20 images per project, ordering always contiguous (0..n-1).
 - **Contact form** — e-mail normalized, Arabic-Indic digits in phone numbers converted to Latin.
 - **Admin auth** — lockout after N failed logins; refresh-token rotation with reuse detection
-  (replaying a revoked token revokes every session). Only token hashes are stored.
+  (replaying an already-rotated token revokes every session; a token revoked by logout or a
+  password change is just rejected). Only token hashes are stored.
 - **Error codes** — every `DomainException` carries a stable `Code` (e.g. `Article.NotFullyLocalized`)
   for frontend translation.
 

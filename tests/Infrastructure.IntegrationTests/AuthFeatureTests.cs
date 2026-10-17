@@ -108,7 +108,9 @@ public class AuthFeatureTests(InfrastructureFixture fixture) : IClassFixture<Inf
 
         var newSession = await fixture.SendAsync(new ChangePasswordCommand(Password, "a-new-strong-pass-2026"));
 
+        // The other device is signed out...
         await Should.ThrowAsync<UnauthorizedException>(() => fixture.SendAsync(new RefreshSessionCommand(otherDevice.RefreshToken)));
+        // ...and its failed refresh must NOT end the session on this device.
         (await fixture.SendAsync(new RefreshSessionCommand(newSession.RefreshToken))).ShouldNotBeNull();
         (await fixture.SendAsync(new LoginCommand(Email, "a-new-strong-pass-2026"))).ShouldNotBeNull();
     }

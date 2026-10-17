@@ -75,6 +75,20 @@ public class AdminUserTests
     }
 
     [Fact]
+    public void Token_revoked_by_logout_is_rejected_without_ending_other_sessions()
+    {
+        var admin = Admin();
+        admin.IssueRefreshToken("laptop", Now.AddDays(7), Now);
+        var phone = admin.IssueRefreshToken("phone", Now.AddDays(7), Now);
+        admin.RevokeRefreshToken("laptop", Now);
+
+        var result = admin.RotateRefreshToken("laptop", "laptop-2", Now.AddDays(7), Now.AddMinutes(1));
+
+        result.Status.ShouldBe(RefreshTokenStatus.Revoked);
+        phone.IsRevoked.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Rotation_reports_not_found_and_expired()
     {
         var admin = Admin();
