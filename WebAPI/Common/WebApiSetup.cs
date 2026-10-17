@@ -67,7 +67,7 @@ public static class WebApiSetup
             {
                 o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
                 // The proxy runs next to the app (Docker network); its address isn't known in advance.
-                o.KnownNetworks.Clear();
+                o.KnownIPNetworks.Clear();
                 o.KnownProxies.Clear();
             });
         }

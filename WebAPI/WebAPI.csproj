@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.OpenApi" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
     <!-- Needed by `dotnet ef` when WebAPI is the startup project -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
