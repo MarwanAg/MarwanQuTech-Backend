@@ -85,10 +85,13 @@ public static class WebApiSetup
         app.UseExceptionHandler();
         app.UseStatusCodePages();
 
+        // In Development the Next.js server calls http://localhost:5148 and Node doesn't trust the
+        // ASP.NET dev certificate, so plain HTTP must not be redirected to HTTPS there.
         if (!app.Environment.IsDevelopment())
+        {
             app.UseHsts();
-
-        app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
+        }
         app.UseSecurityHeaders();
         app.UseUploads();
 
