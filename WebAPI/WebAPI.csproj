@@ -3,7 +3,7 @@
   <PropertyGroup>
     <RootNamespace>MarwanQuTech.WebApi</RootNamespace>
     <AssemblyName>MarwanQuTech.WebApi</AssemblyName>
-    <!-- `dotnet user-secrets set ... --project WebAPI` stores secrets outside the repo under this id -->
+    <!-- user-secrets for this project are stored outside the repo under this id -->
     <UserSecretsId>marwanqutech-webapi-6f1c2a9e</UserSecretsId>
   </PropertyGroup>
 
