@@ -16,7 +16,16 @@ internal sealed class NextJsRevalidationService(
 
         if (string.IsNullOrWhiteSpace(o.BaseUrl) || tags.Count == 0)
         {
-            logger.LogDebug("Next.js revalidation skipped (not configured). Tags: {Tags}", string.Join(", ", tags));
+            logger.LogDebug("Next.js revalidation skipped (NextJs:BaseUrl not set). Tags: {Tags}", string.Join(", ", tags));
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(o.RevalidateSecret))
+        {
+            // Next.js rejects calls without the secret, so the public site would keep stale pages.
+            logger.LogWarning(
+                "NextJs:RevalidateSecret is not set — the public site will not refresh after content changes. Tags: {Tags}",
+                string.Join(", ", tags));
             return;
         }
 
@@ -25,10 +34,18 @@ internal sealed class NextJsRevalidationService(
             Content = JsonContent.Create(new { tags })
         };
 
-        if (!string.IsNullOrEmpty(o.RevalidateSecret))
-            request.Headers.Add(SecretHeader, o.RevalidateSecret);
+        request.Headers.Add(SecretHeader, o.RevalidateSecret);
 
         using var response = await http.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            logger.LogWarning(
+                "Next.js rejected the revalidation secret. NextJs:RevalidateSecret (API) must equal REVALIDATE_SECRET (Next.js .env). Tags: {Tags}",
+                string.Join(", ", tags));
+            return;
+        }
+
         response.EnsureSuccessStatusCode();
 
         logger.LogInformation("Revalidated Next.js tags: {Tags}", string.Join(", ", tags));
