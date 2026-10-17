@@ -1,0 +1,22 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+*.DotSettings.user
+TestResults/
+coverage*/
+
+## Secrets & local config
+appsettings.*.local.json
+*.env
+.env*
+
+## Uploaded media (generated at runtime)
+src/MarwanQuTech.WebApi/wwwroot/uploads/
+
+## OS
+.DS_Store
+Thumbs.db

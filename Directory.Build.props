@@ -1,0 +1,13 @@
+<Project>
+  <!-- Shared settings applied to every project in the solution -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Authors>Marwan AbuGhazaleh</Authors>
+    <Company>MarwanQuTech</Company>
+    <Product>MarwanQuTech</Product>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>
