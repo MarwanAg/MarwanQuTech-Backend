@@ -82,6 +82,13 @@ public class ArticleTests
         article.GetReadingTimeMinutes(Language.En).ShouldBe(3);
     }
 
+    [Theory]
+    [InlineData(null, 1)]
+    [InlineData("", 1)]
+    [InlineData("one two three", 1)]
+    public void EstimateReadingTimeMinutes_handles_empty_text(string? text, int expected)
+        => Article.EstimateReadingTimeMinutes(text).ShouldBe(expected);
+
     [Fact]
     public void UpdateSeo_sets_overrides()
     {

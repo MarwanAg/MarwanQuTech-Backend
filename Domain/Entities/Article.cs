@@ -136,9 +136,15 @@ public sealed class Article : AuditableEntity
 
     /// <summary>Estimated reading time in minutes (~200 words per minute), at least 1.</summary>
     public int GetReadingTimeMinutes(Language language)
+        => EstimateReadingTimeMinutes(Content.GetOrFallback(language));
+
+    /// <summary>Same estimate for raw Markdown (used by list queries that project only one language).</summary>
+    public static int EstimateReadingTimeMinutes(string? text)
     {
-        var text = Content.GetOrFallback(language);
-        var words = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+        var words = string.IsNullOrWhiteSpace(text)
+            ? 0
+            : text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+
         return Math.Max(1, (int)Math.Ceiling(words / 200.0));
     }
 
