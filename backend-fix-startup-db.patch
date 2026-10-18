@@ -1,0 +1,41 @@
+From 3a6c4cc5b8aaa255a5185ffe9e009415db080b2d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 18 Oct 2026 21:21:10 +0300
+Subject: [PATCH] Keep the API running when database initialization fails
+
+A missing or unreachable production database made IIS show '500.30 app failed to start'
+with no detail. Now the failure is logged and /health reports Unhealthy.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01CmV2Um4oXgPKfStsph5DSD
+---
+ WebAPI/Program.cs | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/WebAPI/Program.cs b/WebAPI/Program.cs
+index 4167926..ce74959 100644
+--- a/WebAPI/Program.cs
++++ b/WebAPI/Program.cs
+@@ -27,7 +27,18 @@ var app = builder.Build();
+ app.UseWebApi();
+ 
+ if (app.Services.GetRequiredService<IOptions<WebApiOptions>>().Value.ApplyMigrationsOnStartup)
+-    await app.Services.InitializeDatabaseAsync();
++{
++    try
++    {
++        await app.Services.InitializeDatabaseAsync();
++    }
++    catch (Exception ex) when (!app.Environment.IsDevelopment())
++    {
++        // Keep the API up so /health reports "Unhealthy" and the error is visible in the logs,
++        // instead of IIS showing a bare "500.30 app failed to start". Next start retries.
++        app.Logger.LogCritical(ex, "Database initialization failed (migrations / admin seed).");
++    }
++}
+ 
+ await app.RunAsync();
+ 
+-- 
+2.43.0
+
