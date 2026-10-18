@@ -64,13 +64,28 @@ public sealed class InfrastructureFixture : IAsyncLifetime
         Services = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
 
         await using var scope = Services.CreateAsyncScope();
-        await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreatedAsync();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        EnsureThrowAwayDatabase(db);
+        await db.Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>Safety net: never create, reset or drop anything but this fixture's random database.</summary>
+    private void EnsureThrowAwayDatabase(ApplicationDbContext db)
+    {
+        var actual = new SqlConnectionStringBuilder(db.Database.GetConnectionString()).InitialCatalog;
+        if (!string.Equals(actual, _databaseName, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                $"Refusing to run integration tests against database '{actual}'. Expected the throw-away '{_databaseName}'.");
     }
 
     public async Task DisposeAsync()
     {
         await using (var scope = Services.CreateAsyncScope())
-            await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureDeletedAsync();
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            EnsureThrowAwayDatabase(db);
+            await db.Database.EnsureDeletedAsync();
+        }
 
         await Services.DisposeAsync();
 

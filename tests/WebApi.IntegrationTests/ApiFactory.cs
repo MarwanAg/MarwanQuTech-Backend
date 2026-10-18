@@ -6,6 +6,7 @@ using MarwanQuTech.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MarwanQuTech.WebApi.IntegrationTests;
@@ -44,6 +45,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         await using var scope = Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        EnsureThrowAwayDatabase(db);
         await db.Database.EnsureCreatedAsync();
 
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
@@ -54,12 +56,28 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     async Task IAsyncLifetime.DisposeAsync()
     {
         await using (var scope = Services.CreateAsyncScope())
-            await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureDeletedAsync();
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            EnsureThrowAwayDatabase(db); // never drop anything but the database this factory created
+            await db.Database.EnsureDeletedAsync();
+        }
 
         await DisposeAsync();
 
         if (Directory.Exists(UploadsRoot))
             Directory.Delete(UploadsRoot, recursive: true);
+    }
+
+    /// <summary>
+    /// Safety net: the tests create and DROP their database. Refuse to touch any database whose name
+    /// isn't the random one generated above (e.g. if some configuration source overrode the connection).
+    /// </summary>
+    private void EnsureThrowAwayDatabase(ApplicationDbContext db)
+    {
+        var actual = new SqlConnectionStringBuilder(db.Database.GetConnectionString()).InitialCatalog;
+        if (!string.Equals(actual, _databaseName, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                $"Refusing to run integration tests against database '{actual}'. Expected the throw-away '{_databaseName}'.");
     }
 
     /// <summary>HTTPS client with a cookie jar (the refresh cookie is Secure and scoped to /api/auth).</summary>
