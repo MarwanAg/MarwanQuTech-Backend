@@ -27,4 +27,12 @@
     <InternalsVisibleTo Include="MarwanQuTech.WebApi.IntegrationTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Server-only files: never copied by Publish, so a deploy can't overwrite production secrets. -->
+    <Content Update="appsettings.Secrets.json" CopyToPublishDirectory="Never" />
+    <Content Update="appsettings.Secrets.example.json" CopyToPublishDirectory="Never" />
+    <!-- Uploaded images live on the server; a local wwwroot/uploads must not be published over them. -->
+    <Content Update="wwwroot\uploads\**" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
 </Project>

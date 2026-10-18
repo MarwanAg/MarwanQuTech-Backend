@@ -20,3 +20,6 @@ WebAPI/wwwroot/uploads/
 ## OS
 .DS_Store
 Thumbs.db
+
+# Production secrets (uploaded to the server by hand, never committed)
+WebAPI/appsettings.Secrets.json

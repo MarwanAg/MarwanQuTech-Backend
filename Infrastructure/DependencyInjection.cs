@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.Channels;
 using MarwanQuTech.Application.Common.Options;
 using MarwanQuTech.Infrastructure.BackgroundJobs;
 using MarwanQuTech.Infrastructure.Caching;
@@ -32,7 +33,15 @@ public static class DependencyInjection
         AddCaching(services, configuration);
 
         services.AddSingleton<IImageStorage, LocalImageStorage>();
-        services.AddTransient<IEmailSender, SmtpEmailSender>();
+        // Handlers enqueue; EmailDispatcher sends in the background (bounded so a flood can't exhaust memory).
+        services.AddSingleton(Channel.CreateBounded<QueuedEmail>(new BoundedChannelOptions(500)
+        {
+            SingleReader = true,
+            FullMode = BoundedChannelFullMode.Wait // with Wait, TryWrite returns false when full (logged by the sender)
+        }));
+        services.AddSingleton<SmtpEmailSender>();
+        services.AddSingleton<IEmailSender, QueuedEmailSender>();
+        services.AddHostedService<EmailDispatcher>();
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddSingleton<ITokenService, JwtTokenService>();
 

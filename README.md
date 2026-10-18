@@ -79,6 +79,10 @@ NuGet versions live only in `Directory.Packages.props` — never put `Version=` 
 - `ArticleViewsFlushJob` flushes buffered views every `BackgroundJobs:ArticleViewsFlushMinutes` and on shutdown.
 - `DatabaseInitializer` applies migrations and creates the admin from `AdminSeed:*` on first run.
 
+## Deployment
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (SmarterASP for the API, Vercel for the frontend).
+Production secrets go in `WebAPI/appsettings.Secrets.json` on the server (template: `appsettings.Secrets.example.json`).
+
 ## Local setup (Windows)
 ```bash
 dotnet tool install --global dotnet-ef --version 10.*
