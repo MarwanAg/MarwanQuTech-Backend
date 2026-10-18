@@ -87,6 +87,11 @@ public static class WebApiSetup
 
         // In Development the Next.js server calls http://localhost:5148 and Node doesn't trust the
         // ASP.NET dev certificate, so plain HTTP must not be redirected to HTTPS there.
+        // SSL certificate validation (Let's Encrypt HTTP-01) fetches
+        // http://<domain>/.well-known/acme-challenge/<token> over plain HTTP. It must be served
+        // before any HTTPS redirect, otherwise the first certificate can never be issued.
+        app.UseAcmeChallenge();
+
         if (!app.Environment.IsDevelopment())
         {
             app.UseHsts();
@@ -125,6 +130,24 @@ public static class WebApiSetup
             headers["Referrer-Policy"] = "no-referrer";
             await next();
         });
+
+    /// <summary>
+    /// Serves &lt;content root&gt;/.well-known/acme-challenge/* (the folder the host's SSL tool writes to)
+    /// as plain text over HTTP, and short-circuits so no redirect or other middleware runs.
+    /// </summary>
+    private static void UseAcmeChallenge(this WebApplication app)
+    {
+        var folder = Path.Combine(app.Environment.ContentRootPath, ".well-known", "acme-challenge");
+        Directory.CreateDirectory(folder);
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(folder),
+            RequestPath = "/.well-known/acme-challenge",
+            ServeUnknownFileTypes = true, // challenge tokens have no extension
+            DefaultContentType = "text/plain"
+        });
+    }
 
     /// <summary>Serves files saved by LocalImageStorage. Names are random GUIDs, so they can be cached forever.</summary>
     private static void UseUploads(this WebApplication app)

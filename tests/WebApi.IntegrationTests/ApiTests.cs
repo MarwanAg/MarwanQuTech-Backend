@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -60,6 +61,32 @@ public class PublicApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
         paths.GetProperty("/api/projects").GetProperty("get").TryGetProperty("security", out _).ShouldBeFalse();
         paths.GetProperty("/api/admin/projects").GetProperty("get").TryGetProperty("security", out _).ShouldBeTrue();
         paths.GetProperty("/api/admin/projects/{id}").GetProperty("put").TryGetProperty("security", out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Acme_challenge_files_are_served_over_plain_http()
+    {
+        var contentRoot = factory.Services.GetRequiredService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>().ContentRootPath;
+        var folder = Path.Combine(contentRoot, ".well-known", "acme-challenge");
+        Directory.CreateDirectory(folder);
+        await File.WriteAllTextAsync(Path.Combine(folder, "test-token-123"), "test-token-123.key");
+
+        try
+        {
+            var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+            {
+                BaseAddress = new Uri("http://localhost"),
+                AllowAutoRedirect = false
+            });
+            var response = await client.GetAsync("/.well-known/acme-challenge/test-token-123");
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            (await response.Content.ReadAsStringAsync()).ShouldBe("test-token-123.key");
+        }
+        finally
+        {
+            File.Delete(Path.Combine(folder, "test-token-123"));
+        }
     }
 
     [Fact]
