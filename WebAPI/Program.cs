@@ -27,7 +27,18 @@ var app = builder.Build();
 app.UseWebApi();
 
 if (app.Services.GetRequiredService<IOptions<WebApiOptions>>().Value.ApplyMigrationsOnStartup)
-    await app.Services.InitializeDatabaseAsync();
+{
+    try
+    {
+        await app.Services.InitializeDatabaseAsync();
+    }
+    catch (Exception ex) when (!app.Environment.IsDevelopment())
+    {
+        // Keep the API up so /health reports "Unhealthy" and the error is visible in the logs,
+        // instead of IIS showing a bare "500.30 app failed to start". Next start retries.
+        app.Logger.LogCritical(ex, "Database initialization failed (migrations / admin seed).");
+    }
+}
 
 await app.RunAsync();
 
