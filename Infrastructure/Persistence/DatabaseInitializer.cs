@@ -24,7 +24,19 @@ public sealed class DatabaseInitializer(
 {
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        await db.Database.MigrateAsync(cancellationToken);
+        // Open the connection first so a bad login / database name fails with SQL Server's real
+        // message. Otherwise MigrateAsync treats "can't open it" as "doesn't exist" and tries
+        // CREATE DATABASE, which shared hosts deny — hiding the actual cause.
+        await db.Database.OpenConnectionAsync(cancellationToken);
+        try
+        {
+            await db.Database.MigrateAsync(cancellationToken);
+        }
+        finally
+        {
+            await db.Database.CloseConnectionAsync();
+        }
+
         await SeedAdminAsync(cancellationToken);
     }
 
