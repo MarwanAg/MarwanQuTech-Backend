@@ -12,6 +12,12 @@ public sealed class AdminSeedOptions
     public string? DisplayName { get; set; } = "Marwan AbuGhazaleh";
 
     public string? Password { get; set; }
+
+    /// <summary>
+    /// Recovery switch: when true, the existing admin's password is reset to <see cref="Password"/> and any
+    /// lockout is cleared on the next start. Turn it off again afterwards (every start would reset it).
+    /// </summary>
+    public bool ResetPassword { get; set; }
 }
 
 /// <summary>Applies pending migrations and creates the single admin account on first run.</summary>
@@ -42,10 +48,14 @@ public sealed class DatabaseInitializer(
 
     private async Task SeedAdminAsync(CancellationToken cancellationToken)
     {
-        if (await db.AdminUsers.AnyAsync(cancellationToken))
-            return;
-
         var options = seed.Value;
+
+        if (await db.AdminUsers.AnyAsync(cancellationToken))
+        {
+            if (options.ResetPassword)
+                await ResetAdminPasswordAsync(options, cancellationToken);
+            return;
+        }
 
         if (string.IsNullOrWhiteSpace(options.Email) || string.IsNullOrWhiteSpace(options.Password))
         {
@@ -62,6 +72,24 @@ public sealed class DatabaseInitializer(
         await db.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Admin account {Email} created.", options.Email);
+    }
+
+    private async Task ResetAdminPasswordAsync(AdminSeedOptions options, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(options.Password) || options.Password.Length < auth.Value.MinPasswordLength)
+            throw new InvalidOperationException(
+                $"AdminSeed:ResetPassword is on, but AdminSeed:Password must be at least {auth.Value.MinPasswordLength} characters.");
+
+        // Single-admin site: reset the only account (its e-mail may differ from AdminSeed:Email after a profile edit).
+        var admin = await db.AdminUsers.Include(a => a.RefreshTokens).SingleAsync(cancellationToken);
+
+        admin.ChangePassword(hasher.Hash(options.Password), DateTime.UtcNow);
+        admin.ClearLockout();
+        await db.SaveChangesAsync(cancellationToken);
+
+        logger.LogWarning(
+            "Admin password for {Email} was reset from AdminSeed:Password. Set AdminSeed:ResetPassword to false now.",
+            admin.Email.Value);
     }
 }
 

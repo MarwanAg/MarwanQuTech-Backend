@@ -77,6 +77,13 @@ public sealed class AdminUser : AuditableEntity
         LastLoginAt = utcNow;
     }
 
+    /// <summary>Clears failed attempts and any active lockout (used by the admin password reset).</summary>
+    public void ClearLockout()
+    {
+        FailedLoginAttempts = 0;
+        LockoutEndsAt = null;
+    }
+
     /// <summary>Changing the password signs out every device.</summary>
     public void ChangePassword(string? newPasswordHash, DateTime utcNow)
     {
