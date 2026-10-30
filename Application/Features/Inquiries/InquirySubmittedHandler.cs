@@ -16,12 +16,12 @@ internal sealed class InquirySubmittedHandler(IEmailSender email, ILogger<Inquir
 {
     private static readonly Dictionary<ServiceType, string> ServiceNames = new()
     {
-        [ServiceType.WebDevelopment] = "تطوير مواقع الويب",
-        [ServiceType.ApiDevelopment] = "تطوير واجهات API",
-        [ServiceType.SystemArchitecture] = "تصميم معمارية الأنظمة",
-        [ServiceType.ProcessAutomation] = "أتمتة العمليات",
-        [ServiceType.Consulting] = "استشارات تقنية",
-        [ServiceType.Maintenance] = "صيانة ودعم",
+        [ServiceType.WebDevelopment] = "الحضور الرقمي",
+        [ServiceType.ApiDevelopment] = "ربط الأنظمة",
+        [ServiceType.SystemArchitecture] = "أنظمة إدارة الأعمال",
+        [ServiceType.ProcessAutomation] = "الأتمتة وتنظيم البيانات",
+        [ServiceType.Consulting] = "استشارة أولية",
+        [ServiceType.Maintenance] = "الصيانة والدعم التقني",
         [ServiceType.Other] = "أخرى"
     };
 
